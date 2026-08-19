@@ -3,12 +3,33 @@
 {% block content %}
 <h1>Квартирник</h1>
 
-{% for event, t in cards %}
-  <div class="event">
-    <p class="when">{{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}</p>
-    <h2><a href="/{{ lang }}/event/{{ event.slug }}">{{ t.title }}</a></h2>
-  </div>
+{% if upcoming %}
+  {% for event, t in upcoming %}
+    <div class="event">
+      {% if event.poster_url %}
+        <a href="/{{ lang }}/event/{{ event.slug }}">
+          <img class="poster" src="/{{ event.poster_url }}" alt="{{ t.title }}">
+        </a>
+      {% endif %}
+      <p class="when">
+        {{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}
+        {% if event.venue %} — {{ event.venue.name }}{% endif %}
+      </p>
+      <h2><a href="/{{ lang }}/event/{{ event.slug }}">{{ t.title }}</a></h2>
+      <p>{{ t.description }}</p>
+    </div>
+  {% endfor %}
 {% else %}
-  <p>Подій поки немає.</p>
-{% endfor %}
+  <p>Найближчих подій поки немає.</p>
+{% endif %}
+
+{% if past %}
+  <h2 style="margin-top:3rem">Що вже було</h2>
+  {% for event, t in past %}
+    <div class="event">
+      <p class="when">{{ event.starts_at.strftime("%d.%m.%Y") }}</p>
+      <h3><a href="/{{ lang }}/event/{{ event.slug }}">{{ t.title }}</a></h3>
+    </div>
+  {% endfor %}
+{% endif %}
 {% endblock %}

@@ -8,6 +8,8 @@ from db import get_session
 from models import Event, EventTranslation
 from fastapi.staticfiles import StaticFiles
 
+from datetime import datetime, timezone
+
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
@@ -35,20 +37,33 @@ def home(lang: str, request: Request, session: Session = Depends(get_session)):
     if lang not in LANGS:
         raise HTTPException(status_code=404)
 
-    events = session.scalars(
+    now = datetime.now(timezone.utc)
+    opts = (selectinload(Event.translations), selectinload(Event.venue))
+
+    upcoming = session.scalars(
         select(Event)
-        .where(Event.is_published)
+        .where(Event.is_published, Event.starts_at >= now)
         .order_by(Event.starts_at)
-        .options(selectinload(Event.translations), selectinload(Event.venue))
+        .options(*opts)
     ).all()
 
-    cards = [(e, pick(e.translations, lang)) for e in events]
+    past = session.scalars(
+        select(Event)
+        .where(Event.is_published, Event.starts_at < now)
+        .order_by(Event.starts_at.desc())
+        .limit(6)
+        .options(*opts)
+    ).all()
 
     return templates.TemplateResponse(
-        request=request,
-        name="index.html",
-        context={"cards": cards, "lang": lang},
+        request=request, name="index.html",
+        context={
+            "lang": lang,
+            "upcoming": [(e, pick(e.translations, lang)) for e in upcoming],
+            "past": [(e, pick(e.translations, lang)) for e in past],
+        },
     )
+
 @app.get("/{lang}/event/{slug}")
 def event_page(lang: str, slug: str, request: Request,
                session: Session = Depends(get_session)):
