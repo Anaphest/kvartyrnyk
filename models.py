@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import ForeignKey, String, Text, Boolean, DateTime
+from sqlalchemy import ForeignKey, String, Text, Boolean, DateTime, Table, Column, SmallInteger
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db import Base
 
@@ -12,6 +12,19 @@ class Venue(Base):
     address: Mapped[str | None] = mapped_column(String)
     city: Mapped[str] = mapped_column(String, default="Stockholm")
     map_url: Mapped[str | None] = mapped_column(String)
+    
+event_partners = Table(
+    "event_partners", Base.metadata,
+    Column("event_id", ForeignKey("events.id"), primary_key=True),
+    Column("partner_id", ForeignKey("partners.id"), primary_key=True),
+)
+
+event_performers = Table(
+    "event_performers", Base.metadata,
+    Column("event_id", ForeignKey("events.id"), primary_key=True),
+    Column("performer_id", ForeignKey("performers.id"), primary_key=True),
+    Column("sort_order", SmallInteger, default=0),
+)
 
 
 class Event(Base):
@@ -28,6 +41,8 @@ class Event(Base):
     ticket_url: Mapped[str | None] = mapped_column(String)
     poster_url: Mapped[str | None] = mapped_column(String)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
+    partners: Mapped[list["Partner"]] = relationship(secondary=event_partners)
+    performers: Mapped[list["Performer"]] = relationship(secondary=event_performers)
 
     venue: Mapped[Venue | None] = relationship()
     translations: Mapped[list["EventTranslation"]] = relationship(
@@ -45,3 +60,28 @@ class EventTranslation(Base):
     fundraising_goal: Mapped[str | None] = mapped_column(Text)
 
     event: Mapped[Event] = relationship(back_populates="translations")
+
+    from sqlalchemy import Table, Column, SmallInteger
+
+
+
+class Partner(Base):
+    __tablename__ = "partners"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(String)
+    logo_url: Mapped[str | None] = mapped_column(String)
+    website: Mapped[str | None] = mapped_column(String)
+
+
+class Performer(Base):
+    __tablename__ = "performers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name_latin: Mapped[str] = mapped_column(String)
+    name_uk: Mapped[str | None] = mapped_column(String)
+    website: Mapped[str | None] = mapped_column(String)
+    photo_url: Mapped[str | None] = mapped_column(String)
+
+    def display_name(self, lang: str) -> str:
+        return self.name_uk if lang == "uk" and self.name_uk else self.name_latin

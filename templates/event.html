@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}{{ t.title }} · Квартирник{% endblock %}
+
+{% block meta %}
+<meta property="og:title" content="{{ t.title }}">
+<meta property="og:description" content="{{ (t.description or '')[:200] }}">
+<meta property="og:type" content="event">
+{% if event.poster_url %}
+<meta property="og:image" content="{{ request.base_url }}{{ event.poster_url }}">
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<p><a href="/{{ lang }}/">← Квартирник</a></p>
+
+{% if event.poster_url %}
+  <img class="poster" src="/{{ event.poster_url }}" alt="{{ t.title }}">
+{% endif %}
+
+<h1>{{ t.title }}</h1>
+
+<p class="when">
+  {{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}
+  {% if event.venue %}<br>{{ event.venue.name }}{% if event.venue.address %}, {{ event.venue.address }}{% endif %}{% endif %}
+</p>
+
+{% if event.performers %}
+  <p>{% for p in event.performers %}{{ p.display_name(lang) }}{% if not loop.last %}, {% endif %}{% endfor %}</p>
+{% endif %}
+
+<p>{{ t.description }}</p>
+
+{% if t.fundraising_goal %}
+  <p><strong>{{ t.fundraising_goal }}</strong></p>
+{% endif %}
+
+{% if event.partners %}
+  <p class="when">{% for p in event.partners %}{{ p.name }}{% if not loop.last %} · {% endif %}{% endfor %}</p>
+{% endif %}
+{% endblock %}

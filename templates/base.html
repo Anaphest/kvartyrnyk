@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Квартирник{% endblock %}</title>
+  {% block meta %}{% endblock %}
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 42rem;
+           margin: 0 auto; padding: 2rem 1rem; line-height: 1.6; }
+    nav a { margin-right: 1rem; }
+    footer { margin-top: 4rem; padding-top: 1rem;
+             border-top: 1px solid #ddd; color: #666; font-size: 0.9rem; }
+    .when { color: #666; font-size: 0.9rem; }
+    .poster { max-width: 100%; height: auto; }
+  </style>
+</head>
+<body>
+  <nav>
+    <a href="/uk/">UA</a><a href="/en/">EN</a><a href="/sv/">SV</a>
+  </nav>
+
+  {% block content %}{% endblock %}
+
+  <footer>Kvartyrnyk · Stockholm</footer>
+</body>
+</html>

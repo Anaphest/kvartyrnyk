@@ -1,34 +1,14 @@
-<!DOCTYPE html>
-<html lang="{{ lang }}">
-<head>
-  <meta charset="utf-8">
-  <title>Квартирник</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 40rem;
-           margin: 3rem auto; padding: 0 1rem; line-height: 1.5; }
-    .event { border-top: 1px solid #ddd; padding: 1.5rem 0; }
-    .when { color: #666; font-size: 0.9rem; }
-    nav a { margin-right: 1rem; }
-  </style>
-</head>
-<body>
-  <nav>
-    <a href="/uk/">UA</a><a href="/en/">EN</a><a href="/sv/">SV</a>
-  </nav>
+{% extends "base.html" %}
 
-  <h1>Квартирник</h1>
+{% block content %}
+<h1>Квартирник</h1>
 
-  {% for event, t in cards %}
-    <div class="event">
-      <p class="when">
-        {{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}
-        {% if event.venue %} — {{ event.venue.name }}{% endif %}
-      </p>
-      <h2>{{ t.title }}</h2>
-      <p>{{ t.description }}</p>
-    </div>
-  {% else %}
-    <p>Подій поки немає.</p>
-  {% endfor %}
-</body>
-</html>
+{% for event, t in cards %}
+  <div class="event">
+    <p class="when">{{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}</p>
+    <h2><a href="/{{ lang }}/event/{{ event.slug }}">{{ t.title }}</a></h2>
+  </div>
+{% else %}
+  <p>Подій поки немає.</p>
+{% endfor %}
+{% endblock %}
