@@ -13,6 +13,39 @@ from datetime import datetime, timezone
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+from zoneinfo import ZoneInfo
+
+TZ = ZoneInfo("Europe/Stockholm")
+MONTHS = {
+    "uk": ["січень", "лютий", "березень", "квітень", "травень", "червень",
+           "липень", "серпень", "вересень", "жовтень", "листопад", "грудень"],
+    "en": ["January", "February", "March", "April", "May", "June",
+           "July", "August", "September", "October", "November", "December"],
+    "sv": ["januari", "februari", "mars", "april", "maj", "juni",
+           "juli", "augusti", "september", "oktober", "november", "december"],
+}
+
+def _local(value):
+    if value.tzinfo is None:
+        value = value.replace(tzinfo=timezone.utc)
+    return value.astimezone(TZ)
+
+
+def dt(value, fmt="%d.%m.%Y, %H:%M"):
+    if value is None:
+        return ""
+    return _local(value).strftime(fmt)
+
+
+def month_year(value, lang="uk"):
+    if value is None:
+        return ""
+    v = _local(value)
+    return f"{MONTHS.get(lang, MONTHS['en'])[v.month - 1]} {v.year}"
+
+
+templates.env.filters["dt"] = dt
+templates.env.filters["month_year"] = month_year
 
 
 LANGS = ("uk", "en", "sv")
@@ -24,8 +57,8 @@ def pick(translations, lang):
     for candidate in FALLBACK[lang]:
         if candidate in by_lang:
             return by_lang[candidate]
-    return None
-
+    # останній рубіж: будь-який наявний переклад краще, ніж 500
+    return next(iter(by_lang.values()), None)
 
 @app.get("/")
 def root():
@@ -59,8 +92,8 @@ def home(lang: str, request: Request, session: Session = Depends(get_session)):
         request=request, name="index.html",
         context={
             "lang": lang,
-            "upcoming": [(e, pick(e.translations, lang)) for e in upcoming],
-            "past": [(e, pick(e.translations, lang)) for e in past],
+            "upcoming": [(e, t) for e in upcoming if (t := pick(e.translations, lang))],
+            "past": [(e, t) for e in past if (t := pick(e.translations, lang))],
         },
     )
 
@@ -84,6 +117,8 @@ def event_page(lang: str, slug: str, request: Request,
         raise HTTPException(status_code=404)
 
     t = pick(event.translations, lang)
+    if t is None:
+        raise HTTPException(status_code=404)
     return templates.TemplateResponse(
         request=request, name="event.html",
         context={"event": event, "t": t, "lang": lang},

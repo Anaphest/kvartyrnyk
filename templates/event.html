@@ -21,7 +21,8 @@
 <h1>{{ t.title }}</h1>
 
 <p class="when">
-  {{ event.starts_at.strftime("%d.%m.%Y, %H:%M") }}
+  {% if event.date_is_exact %}{{ event.starts_at | dt }}
+  {% else %}{{ event.starts_at | month_year(lang) }}{% endif %}
   {% if event.venue %}<br>{{ event.venue.name }}{% if event.venue.address %}, {{ event.venue.address }}{% endif %}{% endif %}
 </p>
 
