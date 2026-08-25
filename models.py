@@ -1,7 +1,7 @@
 from datetime import datetime
 from sqlalchemy import (
-    ForeignKey, String, Text, Boolean, DateTime, Table, Column,
-    SmallInteger, CheckConstraint, func,
+    ForeignKey, Text, Boolean, DateTime, Table, Column,
+    SmallInteger, CheckConstraint, Index, func, text,
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from db import Base
@@ -10,24 +10,25 @@ from db import Base
 
 class Venue(Base):
     __tablename__ = "venues"
-
+   
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String)
-    address: Mapped[str | None] = mapped_column(String)
-    city: Mapped[str] = mapped_column(String, default="Stockholm")
-    map_url: Mapped[str | None] = mapped_column(String)
+    name: Mapped[str] = mapped_column(Text)
+    address: Mapped[str | None] = mapped_column(Text)
+    city: Mapped[str] = mapped_column(Text, default="Stockholm")
+    map_url: Mapped[str | None] = mapped_column(Text)
     
 event_partners = Table(
     "event_partners", Base.metadata,
-    Column("event_id", ForeignKey("events.id"), primary_key=True),
-    Column("partner_id", ForeignKey("partners.id"), primary_key=True),
+    Column("event_id", ForeignKey("events.id", ondelete="CASCADE"), primary_key=True),
+    Column("partner_id", ForeignKey("partners.id", ondelete="CASCADE"), primary_key=True),
 )
+
 
 event_performers = Table(
     "event_performers", Base.metadata,
-    Column("event_id", ForeignKey("events.id"), primary_key=True),
-    Column("performer_id", ForeignKey("performers.id"), primary_key=True),
-    Column("sort_order", SmallInteger, default=0),
+    Column("event_id", ForeignKey("events.id", ondelete="CASCADE"), primary_key=True),
+    Column("performer_id", ForeignKey("performers.id", ondelete="CASCADE"), primary_key=True),
+    Column("sort_order", SmallInteger, nullable=False, server_default=text("0")),
 )
 
 
@@ -35,15 +36,15 @@ class Event(Base):
     __tablename__ = "events"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    slug: Mapped[str] = mapped_column(String, unique=True)
+    slug: Mapped[str] = mapped_column(Text, unique=True)
     starts_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     ends_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     date_is_exact: Mapped[bool] = mapped_column(Boolean, default=True)
     venue_id: Mapped[int | None] = mapped_column(ForeignKey("venues.id"))
-    event_type: Mapped[str] = mapped_column(String, default="concert")
-    entry_type: Mapped[str] = mapped_column(String, default="donation")
-    ticket_url: Mapped[str | None] = mapped_column(String)
-    poster_url: Mapped[str | None] = mapped_column(String)
+    event_type: Mapped[str] = mapped_column(Text, default="concert")
+    entry_type: Mapped[str] = mapped_column(Text, default="donation")
+    ticket_url: Mapped[str | None] = mapped_column(Text)
+    poster_url: Mapped[str | None] = mapped_column(Text)
     is_published: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
@@ -61,7 +62,10 @@ class Event(Base):
             "entry_type IN ('free','donation','ticket')",
             name="events_entry_type_check",
         ),
+        Index("idx_events_starts_at", "starts_at"),
+        Index("idx_events_published", "is_published", "starts_at"),
     )
+
     partners: Mapped[list["Partner"]] = relationship(secondary=event_partners)
     performers: Mapped[list["Performer"]] = relationship(
         secondary=event_performers,
@@ -77,13 +81,20 @@ class Event(Base):
 class EventTranslation(Base):
     __tablename__ = "event_translations"
 
-    event_id: Mapped[int] = mapped_column(ForeignKey("events.id"), primary_key=True)
-    lang: Mapped[str] = mapped_column(String, primary_key=True)
-    title: Mapped[str] = mapped_column(String)
+    event_id: Mapped[int] = mapped_column(
+        ForeignKey("events.id", ondelete="CASCADE"), primary_key=True
+    )
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
+    title: Mapped[str] = mapped_column(Text)
     description: Mapped[str | None] = mapped_column(Text)
     fundraising_goal: Mapped[str | None] = mapped_column(Text)
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv')",
+                        name="event_translations_lang_check"),
+    )
 
     event: Mapped[Event] = relationship(back_populates="translations")
+    
 
 
 
@@ -92,9 +103,9 @@ class Partner(Base):
     __tablename__ = "partners"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name: Mapped[str] = mapped_column(String)
-    logo_url: Mapped[str | None] = mapped_column(String)
-    website: Mapped[str | None] = mapped_column(String)
+    name: Mapped[str] = mapped_column(Text)
+    logo_url: Mapped[str | None] = mapped_column(Text)
+    website: Mapped[str | None] = mapped_column(Text)
     translations: Mapped[list["PartnerTranslation"]] = relationship(
         back_populates="partner", cascade="all, delete-orphan"
     )
@@ -105,8 +116,12 @@ class PartnerTranslation(Base):
     partner_id: Mapped[int] = mapped_column(
         ForeignKey("partners.id", ondelete="CASCADE"), primary_key=True
     )
-    lang: Mapped[str] = mapped_column(String, primary_key=True)
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
     description: Mapped[str | None] = mapped_column(Text)
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv')",
+                        name="partner_translations_lang_check"),
+    )
 
     partner: Mapped[Partner] = relationship(back_populates="translations")
 
@@ -114,10 +129,10 @@ class Performer(Base):
     __tablename__ = "performers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    name_latin: Mapped[str] = mapped_column(String)
-    name_uk: Mapped[str | None] = mapped_column(String)
-    website: Mapped[str | None] = mapped_column(String)
-    photo_url: Mapped[str | None] = mapped_column(String)
+    name_latin: Mapped[str] = mapped_column(Text)
+    name_uk: Mapped[str | None] = mapped_column(Text)
+    website: Mapped[str | None] = mapped_column(Text)
+    photo_url: Mapped[str | None] = mapped_column(Text)
     translations: Mapped[list["PerformerTranslation"]] = relationship(
         back_populates="performer", cascade="all, delete-orphan"
     )
@@ -131,8 +146,12 @@ class PerformerTranslation(Base):
     performer_id: Mapped[int] = mapped_column(
         ForeignKey("performers.id", ondelete="CASCADE"), primary_key=True
     )
-    lang: Mapped[str] = mapped_column(String, primary_key=True)
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
     bio: Mapped[str | None] = mapped_column(Text)
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv')",
+                        name="performer_translations_lang_check"),
+    )
 
     performer: Mapped[Performer] = relationship(back_populates="translations")
 
@@ -143,4 +162,9 @@ class EventLanguage(Base):
     event_id: Mapped[int] = mapped_column(
         ForeignKey("events.id", ondelete="CASCADE"), primary_key=True
     )
-    lang: Mapped[str] = mapped_column(String, primary_key=True)
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
+
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv','other')",
+                        name="event_languages_lang_check"),
+    )
