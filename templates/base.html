@@ -8,7 +8,14 @@
   <style>
     body { font-family: system-ui, sans-serif; max-width: 42rem;
            margin: 0 auto; padding: 2rem 1rem; line-height: 1.6; }
-    nav a { margin-right: 1rem; }
+    nav { display: flex; justify-content: space-between; align-items: baseline;
+          flex-wrap: wrap; gap: 1rem;
+          margin-bottom: 2rem; padding-bottom: 1rem;
+          border-bottom: 1px solid #ddd; }
+    nav a { margin-right: 1rem; text-decoration: none; color: #333; }
+    nav a:last-child { margin-right: 0; }
+    nav a.active { font-weight: 600; text-decoration: underline; }
+    .langs a { font-size: 0.85rem; text-transform: uppercase; color: #666; }
     footer { margin-top: 4rem; padding-top: 1rem;
              border-top: 1px solid #ddd; color: #666; font-size: 0.9rem; }
     .when { color: #666; font-size: 0.9rem; }
@@ -17,7 +24,20 @@
 </head>
 <body>
   <nav>
-    <a href="/uk/">UA</a><a href="/en/">EN</a><a href="/sv/">SV</a>
+    <div class="menu">
+      <a href="/{{ lang }}/"
+         {% if request.url.path == "/" ~ lang ~ "/" %}class="active"{% endif %}>{{ _("nav_events") }}</a>
+      <a href="/{{ lang }}/library/"
+         {% if "/library" in request.url.path %}class="active"{% endif %}>{{ _("nav_library") }}</a>
+      <a href="/{{ lang }}/about"
+         {% if request.url.path.endswith("/about") %}class="active"{% endif %}>{{ _("nav_about") }}</a>
+    </div>
+    <div class="langs">
+      {% for code in LANGS %}
+        <a href="{{ switch_lang(request, code) }}"
+           {% if code == lang %}class="active"{% endif %}>{{ code|upper }}</a>
+      {% endfor %}
+    </div>
   </nav>
 
   {% block content %}{% endblock %}
