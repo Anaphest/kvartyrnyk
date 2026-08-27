@@ -129,6 +129,7 @@ class Performer(Base):
     __tablename__ = "performers"
 
     id: Mapped[int] = mapped_column(primary_key=True)
+    slug: Mapped[str | None] = mapped_column(Text, unique=True)
     name_latin: Mapped[str] = mapped_column(Text)
     name_uk: Mapped[str | None] = mapped_column(Text)
     website: Mapped[str | None] = mapped_column(Text)
