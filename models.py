@@ -265,4 +265,45 @@ class BookTranslation(Base):
 
     book: Mapped[Book] = relationship(back_populates="translations")
 
+class Borrower(Base):
+    __tablename__ = "borrowers"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+    email: Mapped[str | None] = mapped_column(Text)
+    phone: Mapped[str | None] = mapped_column(Text)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    loans: Mapped[list["Loan"]] = relationship(back_populates="borrower")
+
+
+class Loan(Base):
+    __tablename__ = "loans"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    book_id: Mapped[int] = mapped_column(ForeignKey("books.id", ondelete="CASCADE"))
+    borrower_id: Mapped[int] = mapped_column(ForeignKey("borrowers.id"))
+    event_id: Mapped[int | None] = mapped_column(ForeignKey("events.id"))
+    taken_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    due_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    returned_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    reminded_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    notes: Mapped[str | None] = mapped_column(Text)
+
+    book: Mapped["Book"] = relationship()
+    borrower: Mapped["Borrower"] = relationship(back_populates="loans")
+
+    __table_args__ = (
+        Index(
+            "idx_loans_one_active_per_book", "book_id",
+            unique=True, postgresql_where=text("returned_at IS NULL"),
+        ),
+        Index("idx_loans_open", "returned_at", "due_at"),
+    )
+
+    
     
