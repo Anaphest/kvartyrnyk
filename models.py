@@ -31,7 +31,11 @@ event_performers = Table(
     Column("sort_order", SmallInteger, nullable=False, server_default=text("0")),
 )
 
-
+book_genres = Table(
+    "book_genres", Base.metadata,
+    Column("book_id", ForeignKey("books.id", ondelete="CASCADE"), primary_key=True),
+    Column("genre_id", ForeignKey("genres.id", ondelete="CASCADE"), primary_key=True),
+)
 
 class Event(Base):
     __tablename__ = "events"
@@ -95,9 +99,7 @@ class EventTranslation(Base):
     )
 
     event: Mapped[Event] = relationship(back_populates="translations")
-    
-
-
+   
 
 
 class Partner(Base):
@@ -206,6 +208,9 @@ class GenreTranslation(Base):
     )
 
     genre: Mapped[Genre] = relationship(back_populates="translations")
+    books: Mapped[list["Book"]] = relationship(
+        secondary=book_genres, back_populates="genres"
+    )
 
 class Book(Base):
     __tablename__ = "books"
@@ -228,6 +233,9 @@ class Book(Base):
 
     translations: Mapped[list["BookTranslation"]] = relationship(
         back_populates="book", cascade="all, delete-orphan"
+    )
+    genres: Mapped[list["Genre"]] = relationship(
+        secondary=book_genres, back_populates="books", order_by="Genre.sort_order"
     )
 
     __table_args__ = (
