@@ -32,6 +32,7 @@ event_performers = Table(
 )
 
 
+
 class Event(Base):
     __tablename__ = "events"
 
@@ -169,3 +170,41 @@ class EventLanguage(Base):
         CheckConstraint("lang IN ('uk','en','sv','other')",
                         name="event_languages_lang_check"),
     )
+
+class Genre(Base):
+    __tablename__ = "genres"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    code: Mapped[str] = mapped_column(Text, unique=True)
+    sort_order: Mapped[int] = mapped_column(SmallInteger, nullable=False,
+                                            server_default=text("0"))
+
+    translations: Mapped[list["GenreTranslation"]] = relationship(
+        back_populates="genre", cascade="all, delete-orphan"
+    )
+
+    def name(self, lang: str) -> str:
+        by_lang = {t.lang: t.name for t in self.translations}
+        for candidate in (lang, "en", "uk"):
+            if candidate in by_lang:
+                return by_lang[candidate]
+        return self.code
+
+
+class GenreTranslation(Base):
+    __tablename__ = "genre_translations"
+
+    genre_id: Mapped[int] = mapped_column(
+        ForeignKey("genres.id", ondelete="CASCADE"), primary_key=True
+    )
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
+    name: Mapped[str] = mapped_column(Text)
+
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv')",
+                        name="genre_translations_lang_check"),
+    )
+
+    genre: Mapped[Genre] = relationship(back_populates="translations")
+
+    
