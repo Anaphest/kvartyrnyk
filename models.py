@@ -207,4 +207,54 @@ class GenreTranslation(Base):
 
     genre: Mapped[Genre] = relationship(back_populates="translations")
 
+class Book(Base):
+    __tablename__ = "books"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    author_latin: Mapped[str] = mapped_column(Text)
+    author_uk: Mapped[str | None] = mapped_column(Text)
+    title_original: Mapped[str] = mapped_column(Text)
+    lang: Mapped[str] = mapped_column(Text)
+    isbn: Mapped[str | None] = mapped_column(Text)
+    year: Mapped[int | None] = mapped_column(SmallInteger)
+    audience: Mapped[str] = mapped_column(Text, server_default=text("'adult'"))
+    war_related: Mapped[bool] = mapped_column(Boolean, nullable=False,
+                                              server_default=text("false"))
+    cover_url: Mapped[str | None] = mapped_column(Text)
+    notes: Mapped[str | None] = mapped_column(Text)
+    added_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+    translations: Mapped[list["BookTranslation"]] = relationship(
+        back_populates="book", cascade="all, delete-orphan"
+    )
+
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv','other')", name="books_lang_check"),
+        CheckConstraint("audience IN ('adult','teen','child')",
+                        name="books_audience_check"),
+        Index("idx_books_author", "author_latin"),
+    )
+
+    def author_name(self, lang: str) -> str:
+        return self.author_uk if lang == "uk" and self.author_uk else self.author_latin
+
+class BookTranslation(Base):
+    __tablename__ = "book_translations"
+
+    book_id: Mapped[int] = mapped_column(
+        ForeignKey("books.id", ondelete="CASCADE"), primary_key=True
+    )
+    lang: Mapped[str] = mapped_column(Text, primary_key=True)
+    title: Mapped[str | None] = mapped_column(Text)
+    annotation: Mapped[str | None] = mapped_column(Text)
+
+    __table_args__ = (
+        CheckConstraint("lang IN ('uk','en','sv')",
+                        name="book_translations_lang_check"),
+    )
+
+    book: Mapped[Book] = relationship(back_populates="translations")
+
     
