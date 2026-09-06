@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _("nav_library") }} · {{ _("site_title") }}{% endblock %}
+
+{% block content %}
+<h1>{{ _("nav_library") }}</h1>
+
+{% if books %}
+  <div class="books">
+    {% for book, t in books %}
+      <article class="book {% if book.id in on_loan %}on-loan{% endif %}">
+        <div class="cover-wrap">
+          {% if book.cover_url %}
+            <img class="cover" src="/{{ book.cover_url }}" alt="">
+          {% else %}
+            <div class="cover cover-empty"></div>
+          {% endif %}
+          {% if book.id in on_loan %}
+            <span class="on-loan-label">{{ _("book_on_loan") }}</span>
+          {% endif %}
+        </div>
+
+
+        <div class="book-info" {% if t and t.title %}title="{{ book.title_original }}"{% endif %}>
+          <strong>{{ (t.title if t and t.title else book.title_original) }}</strong>
+          <span class="when">{{ book.author_name(lang) }}{% if book.year %}, {{ book.year }}{% endif %}{% if book.lang %} · {{ book.lang|upper }}{% endif %}</span>
+          {% if book.genres %}
+            <span class="tags">{% for g in book.genres %}{{ g.name(lang) }}{% if not loop.last %} · {% endif %}{% endfor %}</span>
+          {% endif %}
+        </div>
+    </article>
+    {% endfor %}
+  </div>
+{% else %}
+  <p>{{ _("library_empty") }}</p>
+{% endif %}
+{% endblock %}

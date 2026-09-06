@@ -65,6 +65,11 @@ STRINGS = {
         "en": "Library",
         "sv": "Bibliotek",
     },
+    "library_empty": {
+        "uk": "Бібліотека порожня",
+        "en": "The library is empty",
+        "sv": "Biblioteket är tomt",
+    },
     "book_on_loan": {
         "uk": "зараз читають",
         "en": "currently borrowed",

@@ -5,14 +5,14 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from filters import templates, LANGS
 from i18n import translator
-from routers import events, pages
+from routers import events,  library, pages
 
 app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 app.include_router(pages.router)
 app.include_router(events.router)
-
+app.include_router(library.router)
 
 @app.exception_handler(StarletteHTTPException)
 async def http_exception_handler(request: Request, exc: StarletteHTTPException):

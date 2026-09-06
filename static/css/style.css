@@ -3,6 +3,7 @@
   --muted: #666;
   --line: #ddd;
   --measure: 42rem;
+  --surface: #f0f0f0;
 }
 body { font-family: system-ui, sans-serif; max-width: var(--measure);
        margin: 0 auto; padding: 2rem 1rem; line-height: 1.6; }
@@ -19,3 +20,23 @@ footer { margin-top: 4rem; padding-top: 1rem;
 .when { color: var(--muted); font-size: 0.9rem; }
 .poster { max-width: 100%; height: auto; }
 .past-heading { margin-top: 3rem; }
+.book strong { font-size: 0.95rem; line-height: 1.3; display: block; margin-top: 0.4rem; }
+.book .when, .book .tags { font-size: 0.8rem; }
+.books { list-style: none; padding: 0;
+         display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+         gap: 1.25rem; }
+.book { display: block; }
+.cover, .cover-empty { width: 100%; aspect-ratio: 2 / 3; object-fit: cover; }
+.cover-empty { background: var(--surface); border: 1px solid var(--line); }
+.book.on-loan .cover { filter: grayscale(1); opacity: 0.45; }
+.book.on-loan strong { color: var(--muted); font-weight: 500; }
+.cover-wrap { position: relative; }
+.on-loan-label { position: absolute; top: 0.5rem; left: 50%;
+                 transform: translateX(-50%);
+                 background: var(--text); color: #fff;
+                 font-size: 0.7rem; font-weight: 600;
+                 text-transform: uppercase; letter-spacing: 0.03em;
+                 padding: 0.25rem 0.5rem; white-space: nowrap; }
+.book-info span { display: block; }
+.book-info .when, .book-info .tags { display: block; }
+.tags {color: var(--muted); }
