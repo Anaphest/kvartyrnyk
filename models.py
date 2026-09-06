@@ -184,6 +184,9 @@ class Genre(Base):
     translations: Mapped[list["GenreTranslation"]] = relationship(
         back_populates="genre", cascade="all, delete-orphan"
     )
+    books: Mapped[list["Book"]] = relationship(
+        secondary=book_genres, back_populates="genres"
+    )
 
     def name(self, lang: str) -> str:
         by_lang = {t.lang: t.name for t in self.translations}
@@ -191,6 +194,7 @@ class Genre(Base):
             if candidate in by_lang:
                 return by_lang[candidate]
         return self.code
+  
 
 
 class GenreTranslation(Base):
@@ -208,9 +212,7 @@ class GenreTranslation(Base):
     )
 
     genre: Mapped[Genre] = relationship(back_populates="translations")
-    books: Mapped[list["Book"]] = relationship(
-        secondary=book_genres, back_populates="genres"
-    )
+    
 
 class Book(Base):
     __tablename__ = "books"

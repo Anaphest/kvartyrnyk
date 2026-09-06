@@ -1,0 +1,21 @@
+:root {
+  --text: #333;
+  --muted: #666;
+  --line: #ddd;
+  --measure: 42rem;
+}
+body { font-family: system-ui, sans-serif; max-width: var(--measure);
+       margin: 0 auto; padding: 2rem 1rem; line-height: 1.6; }
+nav { display: flex; justify-content: space-between; align-items: baseline;
+      flex-wrap: wrap; gap: 1rem;
+      margin-bottom: 2rem; padding-bottom: 1rem;
+      border-bottom: 1px solid var(--line); }
+nav a { margin-right: 1rem; text-decoration: none; color: var(--text); }
+nav a:last-child { margin-right: 0; }
+nav a.active { font-weight: 600; text-decoration: underline; }
+.langs a { font-size: 0.85rem; text-transform: uppercase; color: var(--muted); }
+footer { margin-top: 4rem; padding-top: 1rem;
+         border-top: 1px solid var(--line); color: var(--muted); font-size: 0.9rem; }
+.when { color: var(--muted); font-size: 0.9rem; }
+.poster { max-width: 100%; height: auto; }
+.past-heading { margin-top: 3rem; }
